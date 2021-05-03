@@ -41,9 +41,12 @@ def sync_fu(f: Callable[..., Any]) -> Callable[..., Any]:
 
     @wraps(f)
     def run(*args, **kwargs):
-        return asyncio.get_event_loop().run_until_complete(f(*args, **kwargs))
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            loop.create_task(f(*args, **kwargs))
+        else:
+            loop.run_until_complete(f(*args, **kwargs))
     return run
-
 
 if PY35:
     sync.register(types.CoroutineType)(sync_co)
